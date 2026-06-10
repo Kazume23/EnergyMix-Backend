@@ -17,7 +17,7 @@
             var startDateText = startDateUtc.ToString("yyyy-MM-ddTHH:mmZ");
             var endDateText = endDateUtc.ToString("yyyy-MM-ddTHH:mmZ");
 
-            var generationEndpointUrl = $"generation?from={startDateText}&to={endDateText}";
+            var generationEndpointUrl = $"generation/{startDateText}/{endDateText}";
 
             var carbonApiResponse = await _httpClient.GetAsync(generationEndpointUrl);
 
