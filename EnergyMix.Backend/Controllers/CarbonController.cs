@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EnergyMix.Backend.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EnergyMix.Backend.Controllers;
 
@@ -6,9 +7,9 @@ namespace EnergyMix.Backend.Controllers;
 [Route("api/[controller]")]
 public class CarbonController : ControllerBase
 {
-    private readonly Services.CarbonIntensityService _carbonIntensityService;
+    private readonly CarbonIntensityService _carbonIntensityService;
 
-    public CarbonController(Services.CarbonIntensityService carbonIntensityService)
+    public CarbonController(CarbonIntensityService carbonIntensityService)
     {
         _carbonIntensityService = carbonIntensityService;
     }
@@ -16,9 +17,13 @@ public class CarbonController : ControllerBase
     [HttpGet("raw-generation")]
     public async Task<IActionResult> GetRawGeneration()
     {
-        var rawGenerationMixJson = await _carbonIntensityService.GetRawGenerationMixAsync();
+        var startDateUtc = DateTimeOffset.UtcNow.Date;
+        var endDateUtc = startDateUtc.AddDays(1);
 
-        return Content(rawGenerationMixJson, "application/json");
+        var generationResponse = await _carbonIntensityService.GetRawGenerationMixAsync(
+            startDateUtc,
+            endDateUtc);
+
+        return Ok(generationResponse);
     }
-
 }
