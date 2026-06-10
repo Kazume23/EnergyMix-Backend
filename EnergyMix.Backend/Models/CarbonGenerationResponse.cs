@@ -5,6 +5,6 @@ namespace Energy.Mix.Backend.Models;
 public class CarbonGenerationResponse
 {
     [JsonPropertyName("data")]
-    public List<Generationinterval> Data { get; init; } = [];
+    public List<GenerationInterval> Data { get; init; } = [];
 
 }
