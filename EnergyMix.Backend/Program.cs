@@ -10,6 +10,9 @@ builder.Services.AddHttpClient<CarbonIntensityService>(client =>
     client.BaseAddress = new Uri("https://api.carbonintensity.org.uk/");
 });
 
+builder.Services.AddSingleton<CleanEnergyCalculator>();
+builder.Services.AddSingleton<EnergyMixCalculator>();
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
