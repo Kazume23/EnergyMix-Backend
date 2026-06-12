@@ -1,4 +1,4 @@
-﻿using EnergyMix.Backend.Models;
+using EnergyMix.Backend.Models;
 
 namespace EnergyMix.Backend.Services;
 
@@ -15,16 +15,8 @@ public sealed class CleanEnergyCalculator
 
     public decimal CalculateCleanEnergyPercentage(IEnumerable<GenerationMixItem> generationMix)
     {
-        decimal cleanEnergyPercentage = 0m;
-
-        foreach(var generationMixItem in generationMix)
-        {
-            if (CleanEnergyTypes.Contains(generationMixItem.Fuel))
-            {
-                cleanEnergyPercentage += generationMixItem.Percentage;
-            }
-        }
-
-        return cleanEnergyPercentage;
+        return generationMix
+            .Where(generationMixItem => CleanEnergyTypes.Contains(generationMixItem.Fuel))
+            .Sum(generationMixItem => generationMixItem.Percentage);
     }
 }
