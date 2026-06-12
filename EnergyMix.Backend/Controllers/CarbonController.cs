@@ -1,3 +1,4 @@
+using EnergyMix.Backend.Dtos.Requests;
 using EnergyMix.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,17 +24,13 @@ public class CarbonController : ControllerBase
     }
 
     [HttpGet("optimal-charging-window")]
-    public async Task<IActionResult> GetOptimalChargingWindow([FromQuery] int hours)
+    public async Task<IActionResult> GetOptimalChargingWindow([FromQuery] OptimalChargingWindowQueryDto query)
     {
         try
         {
-            var optimalChargingWindow = await _carbonService.GetOptimalChargingWindowAsync(hours);
+            var optimalChargingWindow = await _carbonService.GetOptimalChargingWindowAsync(query.Hours);
 
             return Ok(optimalChargingWindow);
-        }
-        catch (ArgumentOutOfRangeException exception)
-        {
-            return BadRequest(new { message = exception.Message });
         }
         catch (InvalidOperationException exception)
         {

@@ -1,5 +1,6 @@
 using EnergyMix.Backend.Clients;
 using EnergyMix.Backend.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EnergyMix.Backend.Config;
 
@@ -7,7 +8,10 @@ public static class ApplicationConfiguration
 {
     public static void AddApplicationServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddControllers();
+        builder.Services.AddControllers()
+            .ConfigureApiBehaviorOptions(options =>
+                options.InvalidModelStateResponseFactory = CreateValidationErrorResponse);
+
         builder.Services.AddOpenApi();
         builder.Services.AddFrontendCors(builder.Configuration);
         builder.Services.AddCarbonIntensityClient(builder.Configuration);
@@ -33,9 +37,7 @@ public static class ApplicationConfiguration
 
     private static void AddFrontendCors(this IServiceCollection services, IConfiguration configuration)
     {
-        var allowedOrigins = configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? [];
+        var allowedOrigins = GetAllowedOrigins(configuration);
 
         services.AddCors(options =>
         {
@@ -58,5 +60,28 @@ public static class ApplicationConfiguration
 
             client.BaseAddress = new Uri(carbonApiBaseUrl);
         });
+    }
+
+    private static string[] GetAllowedOrigins(IConfiguration configuration)
+    {
+        var allowedOrigins = configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? [];
+
+        return allowedOrigins
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Select(origin => origin.Trim().TrimEnd('/'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static IActionResult CreateValidationErrorResponse(ActionContext context)
+    {
+        var message = context.ModelState.Values
+            .SelectMany(modelStateEntry => modelStateEntry.Errors)
+            .Select(modelError => modelError.ErrorMessage)
+            .FirstOrDefault() ?? "The request is invalid.";
+
+        return new BadRequestObjectResult(new { message });
     }
 }
