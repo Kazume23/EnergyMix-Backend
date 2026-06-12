@@ -124,36 +124,33 @@ Example validation error:
 
 ## Configuration
 
-The backend allows frontend requests through CORS.
+The backend allows frontend requests through CORS. Allowed frontend origins are configured in `appsettings.json` under `Cors:AllowedOrigins`.
 
-Local frontend origins are configured by default:
-
-```text
-http://localhost:5173
-http://localhost:5174
-```
-
-For deployed environments, configure the deployed frontend URL:
+Configured origins:
 
 ```json
 {
-  "FrontendUrl": "https://your-frontend-url.com"
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://energymix-frontend-hju7.onrender.com"
+    ]
+  }
 }
 ```
 
-Current production frontend URL:
+CORS origins should be written without a trailing slash, for example `https://energymix-frontend-hju7.onrender.com`.
+
+For production deployment, `AllowedHosts` must include the deployed backend host. The current production backend host is configured as:
 
 ```json
 {
-  "FrontendUrl": "https://energymix-frontend-hju7.onrender.com"
+  "AllowedHosts": "localhost;127.0.0.1;energymix-backend-wsuq.onrender.com"
 }
 ```
 
-<<<<<<< HEAD
-=======
-For production deployment, set `AllowedHosts` to the deployed backend host, for example through the `ASPNETCORE_ALLOWEDHOSTS` environment variable. Do not use `*` for a public deployment.
-
->>>>>>> 9bd99652ecae5ef5ade7bbad4bae3cadd9a47f0b
+The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `ASPNETCORE_ALLOWEDHOSTS`.
 ## Running Locally
 
 Restore dependencies:
