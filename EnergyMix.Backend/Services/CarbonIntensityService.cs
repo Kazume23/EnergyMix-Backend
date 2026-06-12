@@ -26,8 +26,13 @@ namespace EnergyMix.Backend.Services
             
             var generationResponse = 
                 await carbonApiResponse.Content.ReadFromJsonAsync<CarbonGenerationResponse>();
-            return generationResponse
-                ?? throw new InvalidOperationException("Carbon Intensity API returned an empty generation response.");
+
+            if (generationResponse is null)
+            {
+                throw new InvalidOperationException("Carbon Intensity API returned an empty generation response.");
+            }
+
+            return generationResponse;
         }
     }
 }
