@@ -21,8 +21,11 @@ This repository contains the .NET backend. The frontend application is maintaine
 * Calculates average daily generation mix for today, tomorrow, and the day after tomorrow.
 * Calculates clean energy percentage using the task definition.
 * Finds the optimal EV charging window for a duration from 1 to 6 full hours.
-* Provides unit tests for calculation logic.
+* Uses RFC 7807 Problem Details for error responses.
+* Adds caching, basic retry handling, request logging, rate limiting, and health checks.
+* Provides unit tests for calculation, service, controller, and utility logic.
 * Includes Docker support for deployment.
+* Includes a GitHub Actions CI workflow.
 
 ## Technology Stack
 
@@ -128,15 +131,30 @@ Example validation error:
 
 ```json
 {
-  "message": "Hours must be between 1 and 6."
+  "type": "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  "title": "One or more validation errors occurred.",
+  "status": 400,
+  "errors": {
+    "Hours": [
+      "Hours must be between 1 and 6."
+    ]
+  }
 }
 ```
+
+### Health Check
+
+```http
+GET /health
+```
+
+Returns the ASP.NET Core health check status and is also used by the Docker `HEALTHCHECK`.
 
 ## Configuration
 
 The backend allows frontend requests through CORS. Allowed frontend origins are configured under `Cors:AllowedOrigins`.
 
-Production defaults are stored in `appsettings.json`:
+Production host and CORS defaults are stored in `appsettings.Production.json`:
 
 ```json
 {
@@ -166,6 +184,19 @@ Local development origins are stored in `appsettings.Development.json`:
 CORS origins should be written without a trailing slash, for example `https://energymix-frontend-hju7.onrender.com`. The application also trims trailing slashes defensively when building the CORS policy.
 
 The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `AllowedHosts`.
+
+External Carbon Intensity API settings are configured under `CarbonIntensityApi`:
+
+```json
+{
+  "CarbonIntensityApi": {
+    "BaseUrl": "https://api.carbonintensity.org.uk/",
+    "TimeoutSeconds": 10,
+    "RetryCount": 2,
+    "RetryDelayMilliseconds": 500
+  }
+}
+```
 
 ## Running Locally
 
@@ -212,6 +243,9 @@ The test project covers calculation logic, including:
 * clean energy percentage calculation
 * daily energy mix aggregation
 * optimal charging window selection
+* average source share calculation
+* Carbon service orchestration and caching
+* controller success responses
 
 ## Docker
 
@@ -235,15 +269,20 @@ The container exposes the API on port `8080`.
 EnergyMix.Backend/
   Clients/       External API clients
   Config/        Application service and middleware configuration
+  Constants/     Shared business constants
   Controllers/   HTTP endpoints
   Calculators/   Stateless calculation logic
   Dtos/          Request, external API, and backend response DTOs
+  Exceptions/    Application-specific exceptions
   Services/      Business orchestration
   Utilities/     Shared stateless helper logic
 
 EnergyMix.Backend.Tests/
   Calculators/   Unit tests for calculation logic
+  Controllers/   Unit tests for controller responses
   Helpers/       Shared test data builders
+  Services/      Unit tests for service orchestration
+  Utilities/     Unit tests for utility calculations
 ```
 
 ## Notes
