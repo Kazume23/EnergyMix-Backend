@@ -110,17 +110,7 @@ Example response:
 {
   "start": "2026-06-13T01:00:00+00:00",
   "end": "2026-06-13T05:00:00+00:00",
-  "averageCleanEnergyPercentage": 63.41,
-  "sources": [
-    {
-      "fuel": "wind",
-      "percentage": 42.25
-    },
-    {
-      "fuel": "gas",
-      "percentage": 18.34
-    }
-  ]
+  "averageCleanEnergyPercentage": 63.41
 }
 ```
 
@@ -159,8 +149,11 @@ Current production frontend URL:
 }
 ```
 
+<<<<<<< HEAD
+=======
 For production deployment, set `AllowedHosts` to the deployed backend host, for example through the `ASPNETCORE_ALLOWEDHOSTS` environment variable. Do not use `*` for a public deployment.
 
+>>>>>>> 9bd99652ecae5ef5ade7bbad4bae3cadd9a47f0b
 ## Running Locally
 
 Restore dependencies:
