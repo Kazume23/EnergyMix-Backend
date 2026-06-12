@@ -29,6 +29,14 @@ public class ChargingWindowCalculatorTests
         Assert.Equal(startTime.AddMinutes(60), result.Start);
         Assert.Equal(startTime.AddMinutes(180), result.End);
         Assert.Equal(75m, result.AverageCleanEnergyPercentage);
+
+        var sourcesByFuel = result.Sources.ToDictionary(
+            source => source.Fuel,
+            source => source.Percentage);
+
+        Assert.Equal(2, result.Sources.Count);
+        Assert.Equal(25m, sourcesByFuel["gas"]);
+        Assert.Equal(75m, sourcesByFuel["wind"]);
     }
 
     [Theory]
