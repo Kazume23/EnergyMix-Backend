@@ -1,29 +1,24 @@
-using EnergyMix.Backend.Models;
+using EnergyMix.Backend.Calculators;
+using EnergyMix.Backend.Clients;
+using EnergyMix.Backend.Dtos.Responses;
 
 namespace EnergyMix.Backend.Services;
 
 public sealed class CarbonService
 {
-    private readonly CarbonIntensityService _carbonIntensityService;
-    private readonly EnergyMixCalculator _energyMixCalculator;
-    private readonly ChargingWindowCalculator _chargingWindowCalculator;
+    private readonly CarbonIntensityClient _carbonIntensityClient;
 
-    public CarbonService(
-        CarbonIntensityService carbonIntensityService,
-        EnergyMixCalculator energyMixCalculator,
-        ChargingWindowCalculator chargingWindowCalculator)
+    public CarbonService(CarbonIntensityClient carbonIntensityClient)
     {
-        _carbonIntensityService = carbonIntensityService;
-        _energyMixCalculator = energyMixCalculator;
-        _chargingWindowCalculator = chargingWindowCalculator;
+        _carbonIntensityClient = carbonIntensityClient;
     }
 
-    public async Task<List<DailyEnergyMixResponse>> GetDailyMixAsync()
+    public async Task<List<DailyEnergyMixResponseDto>> GetDailyMixAsync()
     {
         var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
         var endDateUtc = startDateUtc.AddDays(3);
 
-        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
+        var generationResponse = await _carbonIntensityClient.GetGenerationAsync(
             startDateUtc,
             endDateUtc);
 
@@ -33,19 +28,19 @@ public sealed class CarbonService
                 generationInterval.To <= endDateUtc)
             .ToList();
 
-        return _energyMixCalculator.CalculateDailyEnergyMix(requestedIntervals);
+        return EnergyMixCalculator.CalculateDailyEnergyMix(requestedIntervals);
     }
 
-    public async Task<OptimalChargingWindowResponse> GetOptimalChargingWindowAsync(int hours)
+    public async Task<OptimalChargingWindowResponseDto> GetOptimalChargingWindowAsync(int hours)
     {
         var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
         var endDateUtc = startDateUtc.AddDays(2);
 
-        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
+        var generationResponse = await _carbonIntensityClient.GetGenerationAsync(
             startDateUtc,
             endDateUtc);
 
-        return _chargingWindowCalculator.FindOptimalChargingWindow(
+        return ChargingWindowCalculator.FindOptimalChargingWindow(
             generationResponse.Data,
             hours);
     }
