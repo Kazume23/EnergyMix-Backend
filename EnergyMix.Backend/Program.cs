@@ -5,25 +5,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-var frontendUrl = builder.Configuration["FrontendUrl"];
+var allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>() ?? [];
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
     {
-        var allowedOrigins = new List<string>
-        {
-            "http://localhost:5173",
-            "http://localhost:5174"
-        };
-
-        if (!string.IsNullOrWhiteSpace(frontendUrl))
-        {
-            allowedOrigins.Add(frontendUrl);
-        }
-
         policy
-            .WithOrigins(allowedOrigins.ToArray())
+            .WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -31,7 +22,10 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddHttpClient<CarbonIntensityService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.carbonintensity.org.uk/");
+    var carbonApiBaseUrl = builder.Configuration["CarbonIntensityApi:BaseUrl"]
+        ?? throw new InvalidOperationException("CarbonIntensityApi:BaseUrl is not configured.");
+
+    client.BaseAddress = new Uri(carbonApiBaseUrl);
 });
 
 builder.Services.AddSingleton<CleanEnergyCalculator>();
