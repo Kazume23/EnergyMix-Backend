@@ -1,17 +1,42 @@
 # EnergyMix.Backend
 
-Backend API for an internship recruitment task. The application uses the public Carbon Intensity API to fetch UK energy generation mix data and calculate clean energy statistics.
+Backend API for an internship assignment focused on the UK electricity generation mix and the best EV charging window based on clean energy share.
 
-## Technologies
+The application uses the public Carbon Intensity API to fetch half-hour generation mix intervals, then calculates:
 
-* .NET 10
-* ASP.NET Core Web API
-* xUnit
-* Carbon Intensity API
+- average daily generation mix for today, tomorrow, and the day after tomorrow
+- the best charging window in the next two days for a user-provided duration
 
-## Features
+## Tech Stack
 
-The backend exposes two main endpoints required by the task.
+- .NET 10
+- ASP.NET Core Web API
+- xUnit for unit tests
+- Docker for deployment
+
+## External API
+
+Data source:
+
+```text
+https://api.carbonintensity.org.uk/
+```
+
+Used endpoint:
+
+```text
+GET /generation/{from}/{to}
+```
+
+The API returns generation mix data in 30-minute intervals.
+
+For this assignment, clean energy is defined as the sum of:
+
+```text
+biomass, nuclear, hydro, wind, solar
+```
+
+## Endpoints
 
 ### Daily energy mix
 
@@ -19,37 +44,25 @@ The backend exposes two main endpoints required by the task.
 GET /api/carbon/daily-mix
 ```
 
-Fetches generation mix data for three days: today, tomorrow and the day after tomorrow.
-
-The endpoint groups half-hour intervals by date and returns average energy source percentages for each day, including the calculated clean energy percentage.
-
-Clean energy sources are:
-
-```text
-biomass
-nuclear
-hydro
-wind
-solar
-```
+Fetches generation data for three days: today, tomorrow, and the day after tomorrow. The backend groups half-hour intervals by date and returns average source shares for each day.
 
 Example response:
 
 ```json
 [
   {
-    "date": "2026-06-11",
+    "date": "2026-06-12",
     "sources": [
       {
-        "fuel": "biomass",
-        "percentage": 7.46
+        "fuel": "wind",
+        "percentage": 32.45
       },
       {
-        "fuel": "wind",
-        "percentage": 36.13
+        "fuel": "gas",
+        "percentage": 21.18
       }
     ],
-    "cleanEnergyPercentage": 60.35
+    "cleanEnergyPercentage": 58.72
   }
 ]
 ```
@@ -60,43 +73,110 @@ Example response:
 GET /api/carbon/optimal-charging-window?hours=4
 ```
 
-Finds the best charging window for an electric vehicle based on the highest average share of clean energy.
+Finds the time window with the highest average clean energy share. The `hours` query parameter must be a full number between `1` and `6`.
 
-The `hours` parameter must be a full number between 1 and 6.
+Because Carbon Intensity data uses 30-minute intervals:
 
-Since Carbon Intensity API data is provided in half-hour intervals, one hour equals two intervals.
+```text
+1 hour = 2 intervals
+3 hours = 6 intervals
+6 hours = 12 intervals
+```
 
 Example response:
 
 ```json
 {
-  "start": "2026-06-13T20:00:00+00:00",
-  "end": "2026-06-14T00:00:00+00:00",
-  "averageCleanEnergyPercentage": 67.79
+  "start": "2026-06-13T01:00:00+00:00",
+  "end": "2026-06-13T05:00:00+00:00",
+  "averageCleanEnergyPercentage": 63.41
 }
 ```
 
-## Running the project
+Example validation error:
 
-From the repository root:
+```json
+{
+  "message": "Hours must be between 1 and 6."
+}
+```
+
+## Running Locally
+
+Restore dependencies:
+
+```bash
+dotnet restore
+```
+
+Build the solution:
+
+```bash
+dotnet build
+```
+
+Run the API:
 
 ```bash
 dotnet run --project EnergyMix.Backend/EnergyMix.Backend.csproj
 ```
 
-Swagger is available in development mode and can be used to test the API endpoints.
+Swagger UI is available in development at:
 
-## Running tests
+```text
+https://localhost:7008/swagger
+```
 
-From the repository root:
+The HTTP profile also uses:
+
+```text
+http://localhost:5200
+```
+
+## Tests
+
+Run unit tests:
 
 ```bash
 dotnet test
 ```
 
-The test project covers the main backend calculation logic:
+The test project focuses on calculation logic:
 
-* clean energy percentage calculation
-* daily energy mix grouping and averaging
-* optimal charging window selection
-* validation of allowed charging window length
+- clean energy percentage calculation
+- daily energy mix aggregation
+- optimal charging window selection
+
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t energymix-backend .
+```
+
+Run the container:
+
+```bash
+docker run -p 8080:8080 energymix-backend
+```
+
+The container exposes the API on port `8080`.
+
+## Project Structure
+
+```text
+EnergyMix.Backend/
+  Controllers/   HTTP endpoints
+  Models/        API and response models
+  Services/      Carbon API client and calculation logic
+
+EnergyMix.Backend.Tests/
+  Services/      Unit tests for calculation services
+```
+
+## Notes
+
+- Time values are handled in UTC because the Carbon Intensity API returns UTC timestamps.
+- The frontend is planned as a separate repository.
+- The backend intentionally uses a simple structure suitable for a small internship assignment.
