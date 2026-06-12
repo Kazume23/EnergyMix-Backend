@@ -2,7 +2,7 @@
 
 namespace EnergyMix.Backend.Models;
 
-public class GenerationMixItem
+public sealed class GenerationMixItem
 {
     [JsonPropertyName("fuel")]
     public string Fuel { get; init; } = string.Empty;
