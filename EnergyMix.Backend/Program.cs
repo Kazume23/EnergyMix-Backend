@@ -5,6 +5,30 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+var frontendUrl = builder.Configuration["FrontendUrl"];
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+    {
+        var allowedOrigins = new List<string>
+        {
+            "http://localhost:5173",
+            "http://localhost:5174"
+        };
+
+        if (!string.IsNullOrWhiteSpace(frontendUrl))
+        {
+            allowedOrigins.Add(frontendUrl);
+        }
+
+        policy
+            .WithOrigins(allowedOrigins.ToArray())
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddHttpClient<CarbonIntensityService>(client =>
 {
     client.BaseAddress = new Uri("https://api.carbonintensity.org.uk/");
@@ -27,6 +51,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("Frontend");
 
 app.MapControllers();
 
