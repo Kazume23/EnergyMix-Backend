@@ -1,23 +1,21 @@
-﻿using EnergyMix.Backend.Models;
-using EnergyMix.Backend.Services;
+using EnergyMix.Backend.Calculators;
+using EnergyMix.Backend.Dtos.CarbonApi;
 using Xunit;
 
-namespace EnergyMix.Backend.Tests.Services;
+namespace EnergyMix.Backend.Tests.Calculators;
 
 public class EnergyMixCalculatorTests
 {
     [Fact]
     public void CalculateDailyEnergyMix_GroupsIntervalsByDateAndCalculatesDailyAverages()
     {
-        var calculator = new EnergyMixCalculator(new CleanEnergyCalculator());
-
-        var generationIntervals = new List<GenerationInterval>
+        var generationIntervals = new List<GenerationIntervalDto>
         {
             new()
             {
                 From = new DateTimeOffset(2026, 6, 11, 0, 0, 0, TimeSpan.Zero),
                 To = new DateTimeOffset(2026, 6, 11, 0, 30, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItem>
+                GenerationMix = new List<GenerationMixItemDto>
                 {
                     new() { Fuel = "biomass", Percentage = 10m },
                     new() { Fuel = "wind", Percentage = 20m },
@@ -28,7 +26,7 @@ public class EnergyMixCalculatorTests
             {
                 From = new DateTimeOffset(2026, 6, 11, 0, 30, 0, TimeSpan.Zero),
                 To = new DateTimeOffset(2026, 6, 11, 1, 0, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItem>
+                GenerationMix = new List<GenerationMixItemDto>
                 {
                     new() { Fuel = "biomass", Percentage = 30m },
                     new() { Fuel = "wind", Percentage = 10m },
@@ -39,7 +37,7 @@ public class EnergyMixCalculatorTests
             {
                 From = new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
                 To = new DateTimeOffset(2026, 6, 12, 0, 30, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItem>
+                GenerationMix = new List<GenerationMixItemDto>
                 {
                     new() { Fuel = "nuclear", Percentage = 50m },
                     new() { Fuel = "gas", Percentage = 50m }
@@ -47,7 +45,7 @@ public class EnergyMixCalculatorTests
             }
         };
 
-        var result = calculator.CalculateDailyEnergyMix(generationIntervals);
+        var result = EnergyMixCalculator.CalculateDailyEnergyMix(generationIntervals);
 
         Assert.Equal(2, result.Count);
 
