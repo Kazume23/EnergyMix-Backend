@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="EnergyMix.Backend.Tests/EnergyMix.Backend.Tests.csproj" />
   <Project Path="EnergyMix.Backend/EnergyMix.Backend.csproj" />
 </Solution>
