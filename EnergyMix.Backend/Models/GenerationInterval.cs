@@ -2,7 +2,7 @@
 
 namespace EnergyMix.Backend.Models;
 
-public class GenerationInterval
+public sealed class GenerationInterval
 {
     [JsonPropertyName("from")]
     public DateTimeOffset From { get; init; }
