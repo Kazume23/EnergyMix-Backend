@@ -134,31 +134,36 @@ Example validation error:
 
 ## Configuration
 
-The backend allows frontend requests through CORS. Allowed frontend origins are configured in `appsettings.json` under `Cors:AllowedOrigins`.
+The backend allows frontend requests through CORS. Allowed frontend origins are configured under `Cors:AllowedOrigins`.
 
-Configured origins:
+Production defaults are stored in `appsettings.json`:
 
 ```json
 {
+  "AllowedHosts": "energymix-backend-wsuq.onrender.com",
   "Cors": {
     "AllowedOrigins": [
-      "http://localhost:5173",
-      "http://localhost:5174",
       "https://energymix-frontend-hju7.onrender.com"
     ]
   }
 }
 ```
 
-CORS origins should be written without a trailing slash, for example `https://energymix-frontend-hju7.onrender.com`.
-
-For production deployment, `AllowedHosts` must include the deployed backend host. The current production backend host is configured as:
+Local development origins are stored in `appsettings.Development.json`:
 
 ```json
 {
-  "AllowedHosts": "localhost;127.0.0.1;energymix-backend-wsuq.onrender.com"
+  "AllowedHosts": "localhost;127.0.0.1",
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:5173",
+      "http://localhost:5174"
+    ]
+  }
 }
 ```
+
+CORS origins should be written without a trailing slash, for example `https://energymix-frontend-hju7.onrender.com`. The application also trims trailing slashes defensively when building the CORS policy.
 
 The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `AllowedHosts`.
 
@@ -232,12 +237,13 @@ EnergyMix.Backend/
   Config/        Application service and middleware configuration
   Controllers/   HTTP endpoints
   Calculators/   Stateless calculation logic
-  Dtos/          External API and backend response DTOs
+  Dtos/          Request, external API, and backend response DTOs
   Services/      Business orchestration
   Utilities/     Shared stateless helper logic
 
 EnergyMix.Backend.Tests/
   Calculators/   Unit tests for calculation logic
+  Helpers/       Shared test data builders
 ```
 
 ## Notes

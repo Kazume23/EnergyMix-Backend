@@ -1,5 +1,5 @@
 using EnergyMix.Backend.Calculators;
-using EnergyMix.Backend.Dtos.CarbonApi;
+using EnergyMix.Backend.Tests.Helpers;
 using Xunit;
 
 namespace EnergyMix.Backend.Tests.Calculators;
@@ -9,15 +9,15 @@ public class CleanEnergyCalculatorTests
     [Fact]
     public void CalculateCleanEnergyPercentage_ReturnsSumOfOnlyCleanEnergySources()
     {
-        var generationMix = new List<GenerationMixItemDto>
+        var generationMix = new[]
         {
-            new() { Fuel = "biomass", Percentage = 10m },
-            new() { Fuel = "nuclear", Percentage = 20m },
-            new() { Fuel = "hydro", Percentage = 5m },
-            new() { Fuel = "wind", Percentage = 15m },
-            new() { Fuel = "solar", Percentage = 7m },
-            new() { Fuel = "gas", Percentage = 30m },
-            new() { Fuel = "coal", Percentage = 13m }
+            GenerationTestDataBuilder.MixItem("biomass", 10m),
+            GenerationTestDataBuilder.MixItem("nuclear", 20m),
+            GenerationTestDataBuilder.MixItem("hydro", 5m),
+            GenerationTestDataBuilder.MixItem("wind", 15m),
+            GenerationTestDataBuilder.MixItem("solar", 7m),
+            GenerationTestDataBuilder.MixItem("gas", 30m),
+            GenerationTestDataBuilder.MixItem("coal", 13m)
         };
 
         var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
@@ -28,11 +28,11 @@ public class CleanEnergyCalculatorTests
     [Fact]
     public void CalculateCleanEnergyPercentage_ReturnsZero_WhenThereAreNoCleanEnergySources()
     {
-        var generationMix = new List<GenerationMixItemDto>
+        var generationMix = new[]
         {
-            new() { Fuel = "gas", Percentage = 60m },
-            new() { Fuel = "coal", Percentage = 20m },
-            new() { Fuel = "imports", Percentage = 20m }
+            GenerationTestDataBuilder.MixItem("gas", 60m),
+            GenerationTestDataBuilder.MixItem("coal", 20m),
+            GenerationTestDataBuilder.MixItem("imports", 20m)
         };
 
         var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
