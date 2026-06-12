@@ -1,6 +1,7 @@
 using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Tests.Helpers;
+using EnergyMix.Backend.Utilities;
 using Xunit;
 
 namespace EnergyMix.Backend.Tests.Calculators;
@@ -28,7 +29,11 @@ public class EnergyMixCalculatorTests
                 GenerationTestDataBuilder.MixItem("gas", 50m))
         };
 
-        var result = EnergyMixCalculator.CalculateDailyEnergyMix(generationIntervals);
+        var energyMixCalculator = new EnergyMixCalculator(
+            new CleanEnergyCalculator(),
+            new EnergySourceShareCalculator());
+
+        var result = energyMixCalculator.CalculateDailyEnergyMix(generationIntervals);
 
         Assert.Equal(2, result.Count);
 
