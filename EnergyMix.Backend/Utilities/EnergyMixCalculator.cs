@@ -1,8 +1,6 @@
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Dtos.Responses;
-using EnergyMix.Backend.Utilities;
-
-namespace EnergyMix.Backend.Calculators;
+namespace EnergyMix.Backend.Utilities;
 
 public sealed class EnergyMixCalculator : IEnergyMixCalculator
 {

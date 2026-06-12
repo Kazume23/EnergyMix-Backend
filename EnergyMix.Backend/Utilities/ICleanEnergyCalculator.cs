@@ -1,6 +1,6 @@
 using EnergyMix.Backend.Dtos.CarbonApi;
 
-namespace EnergyMix.Backend.Calculators;
+namespace EnergyMix.Backend.Utilities;
 
 public interface ICleanEnergyCalculator
 {

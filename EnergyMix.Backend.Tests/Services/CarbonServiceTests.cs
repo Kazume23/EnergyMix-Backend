@@ -1,4 +1,3 @@
-using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Clients;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Services;

@@ -1,10 +1,9 @@
-using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Tests.Helpers;
 using EnergyMix.Backend.Utilities;
 using Xunit;
 
-namespace EnergyMix.Backend.Tests.Calculators;
+namespace EnergyMix.Backend.Tests.Utilities;
 
 public class EnergyMixCalculatorTests
 {

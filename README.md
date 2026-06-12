@@ -22,7 +22,7 @@ This repository contains the .NET backend. The frontend application is maintaine
 * Calculates clean energy percentage using the task definition.
 * Finds the optimal EV charging window for a duration from 1 to 6 full hours.
 * Uses RFC 7807 Problem Details for error responses.
-* Adds caching, basic retry handling, request logging, rate limiting, and health checks.
+* Adds memory caching, retry handling, request logging, rate limiting, health checks, and timeout protection for external HTTP calls.
 * Provides unit tests for calculation, service, controller, and utility logic.
 * Includes Docker support for deployment.
 * Includes a GitHub Actions CI workflow.
@@ -152,6 +152,8 @@ Returns the ASP.NET Core health check status and is also used by the Docker `HEA
 
 ## Configuration
 
+The backend uses regular ASP.NET Core configuration. Shared settings live in `appsettings.json`, while environment-specific host and CORS values live in `appsettings.Development.json` and `appsettings.Production.json`.
+
 The backend allows frontend requests through CORS. Allowed frontend origins are configured under `Cors:AllowedOrigins`.
 
 Production host and CORS defaults are stored in `appsettings.Production.json`:
@@ -183,7 +185,13 @@ Local development origins are stored in `appsettings.Development.json`:
 
 CORS origins should be written without a trailing slash, for example `https://energymix-frontend-hju7.onrender.com`. The application also trims trailing slashes defensively when building the CORS policy.
 
-The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `AllowedHosts`.
+The same values can also be overridden in Render environment variables, for example:
+
+```text
+ASPNETCORE_ENVIRONMENT=Production
+AllowedHosts=energymix-backend-wsuq.onrender.com
+Cors__AllowedOrigins__0=https://energymix-frontend-hju7.onrender.com
+```
 
 External Carbon Intensity API settings are configured under `CarbonIntensityApi`:
 
@@ -191,12 +199,35 @@ External Carbon Intensity API settings are configured under `CarbonIntensityApi`
 {
   "CarbonIntensityApi": {
     "BaseUrl": "https://api.carbonintensity.org.uk/",
-    "TimeoutSeconds": 10,
+    "TotalTimeoutSeconds": 30,
+    "AttemptTimeoutSeconds": 8,
     "RetryCount": 2,
     "RetryDelayMilliseconds": 500
   }
 }
 ```
+
+The outgoing Carbon Intensity API client uses:
+
+* `AttemptTimeoutSeconds` for one HTTP attempt
+* `RetryCount` and `RetryDelayMilliseconds` for transient retries
+* `TotalTimeoutSeconds` as the maximum time budget for the full request, including retries
+
+If the frontend uses its own request timeout, it should be at least as long as the backend total timeout. Otherwise the browser can abort a request before the backend finishes retrying.
+
+## Production Behavior
+
+The application is prepared for deployment behind a reverse proxy such as Render:
+
+* `ForwardedHeaders` is enabled so the app can read proxy headers.
+* HTTPS redirection is only enabled in development because Render terminates HTTPS before forwarding traffic to the container.
+* Unhandled exceptions are converted to RFC 7807 Problem Details responses.
+* External Carbon Intensity API failures return `502 Bad Gateway`.
+* External request timeouts return `504 Gateway Timeout`.
+* Missing generation data returns `503 Service Unavailable`.
+* Validation errors return `400 Bad Request`.
+* Public endpoints are rate limited to `60` requests per minute per remote IP.
+* Carbon Intensity generation responses are cached for `30` minutes.
 
 ## Running Locally
 
@@ -238,6 +269,13 @@ Run unit tests:
 dotnet test
 ```
 
+Run the same build and test style as CI:
+
+```bash
+dotnet build --configuration Release
+dotnet test --no-build --configuration Release
+```
+
 The test project covers calculation logic, including:
 
 * clean energy percentage calculation
@@ -246,6 +284,10 @@ The test project covers calculation logic, including:
 * average source share calculation
 * Carbon service orchestration and caching
 * controller success responses
+
+## CI
+
+GitHub Actions restores dependencies, builds the backend in Release mode, and runs the test project.
 
 ## Docker
 
@@ -271,18 +313,16 @@ EnergyMix.Backend/
   Config/        Application service and middleware configuration
   Constants/     Shared business constants
   Controllers/   HTTP endpoints
-  Calculators/   Stateless calculation logic
   Dtos/          Request, external API, and backend response DTOs
   Exceptions/    Application-specific exceptions
   Services/      Business orchestration
-  Utilities/     Shared stateless helper logic
+  Utilities/     Calculation and shared helper logic
 
 EnergyMix.Backend.Tests/
-  Calculators/   Unit tests for calculation logic
   Controllers/   Unit tests for controller responses
   Helpers/       Shared test data builders
   Services/      Unit tests for service orchestration
-  Utilities/     Unit tests for utility calculations
+  Utilities/     Unit tests for calculation and utility logic
 ```
 
 ## Notes

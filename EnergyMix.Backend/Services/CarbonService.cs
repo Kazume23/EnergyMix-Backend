@@ -1,8 +1,8 @@
-using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Clients;
 using EnergyMix.Backend.Constants;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Dtos.Responses;
+using EnergyMix.Backend.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace EnergyMix.Backend.Services;

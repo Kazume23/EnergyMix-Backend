@@ -1,4 +1,3 @@
-using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Clients;
 using EnergyMix.Backend.Services;
 using EnergyMix.Backend.Utilities;
@@ -51,8 +50,8 @@ public static class ApplicationConfiguration
             app.UseHttpsRedirection();
         }
 
-        app.UseRateLimiter();
         app.UseCors("Frontend");
+        app.UseRateLimiter();
         app.MapControllers();
         app.MapHealthChecks("/health");
     }
@@ -85,9 +84,12 @@ public static class ApplicationConfiguration
         })
         .AddStandardResilienceHandler(options =>
         {
-            var timeoutSeconds = configuration.GetValue(
-                $"{CarbonIntensityApiOptions.SectionName}:TimeoutSeconds",
-                10);
+            var totalTimeoutSeconds = configuration.GetValue(
+                $"{CarbonIntensityApiOptions.SectionName}:TotalTimeoutSeconds",
+                30);
+            var attemptTimeoutSeconds = configuration.GetValue(
+                $"{CarbonIntensityApiOptions.SectionName}:AttemptTimeoutSeconds",
+                8);
             var retryCount = configuration.GetValue(
                 $"{CarbonIntensityApiOptions.SectionName}:RetryCount",
                 2);
@@ -95,8 +97,8 @@ public static class ApplicationConfiguration
                 $"{CarbonIntensityApiOptions.SectionName}:RetryDelayMilliseconds",
                 500);
 
-            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
-            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(totalTimeoutSeconds);
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(attemptTimeoutSeconds);
             options.Retry.MaxRetryAttempts = retryCount;
             options.Retry.Delay = TimeSpan.FromMilliseconds(retryDelayMilliseconds);
         });
