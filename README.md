@@ -199,10 +199,11 @@ External Carbon Intensity API settings are configured under `CarbonIntensityApi`
 {
   "CarbonIntensityApi": {
     "BaseUrl": "https://api.carbonintensity.org.uk/",
-    "TotalTimeoutSeconds": 30,
-    "AttemptTimeoutSeconds": 8,
-    "RetryCount": 2,
-    "RetryDelayMilliseconds": 500
+    "TotalTimeoutSeconds": 45,
+    "AttemptTimeoutSeconds": 20,
+    "RetryCount": 1,
+    "RetryDelayMilliseconds": 1000,
+    "CircuitBreakerSamplingDurationSeconds": 60
   }
 }
 ```
@@ -212,6 +213,7 @@ The outgoing Carbon Intensity API client uses:
 * `AttemptTimeoutSeconds` for one HTTP attempt
 * `RetryCount` and `RetryDelayMilliseconds` for transient retries
 * `TotalTimeoutSeconds` as the maximum time budget for the full request, including retries
+* `CircuitBreakerSamplingDurationSeconds` for the resilience circuit breaker sampling window
 
 If the frontend uses its own request timeout, it should be at least as long as the backend total timeout. Otherwise the browser can abort a request before the backend finishes retrying.
 
@@ -317,6 +319,10 @@ EnergyMix.Backend/
   Exceptions/    Application-specific exceptions
   Services/      Business orchestration
   Utilities/     Calculation and shared helper logic
+    ChargingWindowCalculator/
+    CleanEnergyCalculator/
+    EnergyMixCalculator/
+    EnergySourceShareCalculator/
 
 EnergyMix.Backend.Tests/
   Controllers/   Unit tests for controller responses

@@ -11,6 +11,9 @@ public static class ApplicationConfiguration
 {
     public static void AddApplicationServices(this WebApplicationBuilder builder)
     {
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+
         builder.Services.AddControllers();
         builder.Services.AddProblemDetails();
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -86,21 +89,25 @@ public static class ApplicationConfiguration
         {
             var totalTimeoutSeconds = configuration.GetValue(
                 $"{CarbonIntensityApiOptions.SectionName}:TotalTimeoutSeconds",
-                30);
+                45);
             var attemptTimeoutSeconds = configuration.GetValue(
                 $"{CarbonIntensityApiOptions.SectionName}:AttemptTimeoutSeconds",
-                8);
+                20);
             var retryCount = configuration.GetValue(
                 $"{CarbonIntensityApiOptions.SectionName}:RetryCount",
-                2);
+                1);
             var retryDelayMilliseconds = configuration.GetValue(
                 $"{CarbonIntensityApiOptions.SectionName}:RetryDelayMilliseconds",
-                500);
+                1000);
+            var circuitBreakerSamplingDurationSeconds = configuration.GetValue(
+                $"{CarbonIntensityApiOptions.SectionName}:CircuitBreakerSamplingDurationSeconds",
+                60);
 
             options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(totalTimeoutSeconds);
             options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(attemptTimeoutSeconds);
             options.Retry.MaxRetryAttempts = retryCount;
             options.Retry.Delay = TimeSpan.FromMilliseconds(retryDelayMilliseconds);
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(circuitBreakerSamplingDurationSeconds);
         });
     }
 

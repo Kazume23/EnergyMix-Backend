@@ -1,6 +1,7 @@
 using EnergyMix.Backend.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Polly.Timeout;
 
 namespace EnergyMix.Backend.Config;
 
@@ -50,6 +51,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             ExternalApiException => (StatusCodes.Status502BadGateway, "External API request failed."),
             InsufficientGenerationDataException => (StatusCodes.Status503ServiceUnavailable, "Generation data is not available."),
             HttpRequestException => (StatusCodes.Status502BadGateway, "External API request failed."),
+            TimeoutRejectedException => (StatusCodes.Status504GatewayTimeout, "External API request timed out."),
             TaskCanceledException => (StatusCodes.Status504GatewayTimeout, "External API request timed out."),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")
         };
