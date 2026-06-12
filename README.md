@@ -149,6 +149,11 @@ Current production frontend URL:
 }
 ```
 
+<<<<<<< HEAD
+=======
+For production deployment, set `AllowedHosts` to the deployed backend host, for example through the `ASPNETCORE_ALLOWEDHOSTS` environment variable. Do not use `*` for a public deployment.
+
+>>>>>>> 9bd99652ecae5ef5ade7bbad4bae3cadd9a47f0b
 ## Running Locally
 
 Restore dependencies:
