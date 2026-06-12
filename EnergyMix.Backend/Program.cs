@@ -12,6 +12,7 @@ builder.Services.AddHttpClient<CarbonIntensityService>(client =>
 
 builder.Services.AddSingleton<CleanEnergyCalculator>();
 builder.Services.AddSingleton<EnergyMixCalculator>();
+builder.Services.AddSingleton<ChargingWindowCalculator>();
 
 var app = builder.Build();
 

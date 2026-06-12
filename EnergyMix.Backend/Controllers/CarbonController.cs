@@ -5,37 +5,27 @@ using Microsoft.AspNetCore.Mvc;
 namespace EnergyMix.Backend.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/carbon")]
 public class CarbonController : ControllerBase
 {
     private readonly CarbonIntensityService _carbonIntensityService;
     private readonly EnergyMixCalculator _energyMixCalculator;
+    private readonly ChargingWindowCalculator _chargingWindowCalculator;
 
-    public CarbonController(CarbonIntensityService carbonIntensityService, EnergyMixCalculator energyMixCalculator)
+    public CarbonController(CarbonIntensityService carbonIntensityService, EnergyMixCalculator energyMixCalculator, ChargingWindowCalculator chargingWindowCalculator)
     {
         _carbonIntensityService = carbonIntensityService;
         _energyMixCalculator = energyMixCalculator;
+        _chargingWindowCalculator = chargingWindowCalculator;
     }
 
-    [HttpGet("raw-generation")]
-    public async Task<IActionResult> GetRawGeneration()
-    {
-        var startDateUtc = DateTimeOffset.UtcNow.Date;
-        var endDateUtc = startDateUtc.AddDays(1);
-
-        var generationResponse = await _carbonIntensityService.GetGenerationMixAsync(
-            startDateUtc,
-            endDateUtc);
-
-        return Ok(generationResponse);
-    }
     [HttpGet("daily-mix")]
     public async Task<IActionResult> GetDailyMix()
     {
         var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
         var endDateUtc = startDateUtc.AddDays(3);
 
-        var generationResponse = await _carbonIntensityService.GetGenerationMixAsync(
+        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
             startDateUtc,
             endDateUtc);
 
@@ -52,5 +42,31 @@ public class CarbonController : ControllerBase
         var dailyEnergyMix = _energyMixCalculator.CalculateDailyEnergyMix(requestedIntervals);
 
         return Ok(dailyEnergyMix);
+    }
+
+    [HttpGet("optimal-charging-window")]
+    public async Task<IActionResult> GetOptimalChargingWindow([FromQuery] int hours)
+    {
+        var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
+        var endDateUtc = startDateUtc.AddDays(2);
+
+        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
+            startDateUtc,
+            endDateUtc);
+
+        try
+        {
+            var optimalChargingWindow = _chargingWindowCalculator.FindOptimalChargingWindow(generationResponse.Data, hours);
+
+            return Ok(optimalChargingWindow);
+        }
+        catch (ArgumentOutOfRangeException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
     }
 }
