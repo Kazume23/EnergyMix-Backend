@@ -110,7 +110,17 @@ Example response:
 {
   "start": "2026-06-13T01:00:00+00:00",
   "end": "2026-06-13T05:00:00+00:00",
-  "averageCleanEnergyPercentage": 63.41
+  "averageCleanEnergyPercentage": 63.41,
+  "sources": [
+    {
+      "fuel": "wind",
+      "percentage": 41.22
+    },
+    {
+      "fuel": "gas",
+      "percentage": 19.34
+    }
+  ]
 }
 ```
 
@@ -150,7 +160,8 @@ For production deployment, `AllowedHosts` must include the deployed backend host
 }
 ```
 
-The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `ASPNETCORE_ALLOWEDHOSTS`.
+The same values can also be overridden in Render environment variables, for example with `Cors__AllowedOrigins__0` and `AllowedHosts`.
+
 ## Running Locally
 
 Restore dependencies:
@@ -217,12 +228,16 @@ The container exposes the API on port `8080`.
 
 ```text
 EnergyMix.Backend/
+  Clients/       External API clients
+  Config/        Application service and middleware configuration
   Controllers/   HTTP endpoints
-  Models/        API and response models
-  Services/      Carbon API client and calculation logic
+  Calculators/   Stateless calculation logic
+  Dtos/          External API and backend response DTOs
+  Services/      Business orchestration
+  Utilities/     Shared stateless helper logic
 
 EnergyMix.Backend.Tests/
-  Services/      Unit tests for calculation services
+  Calculators/   Unit tests for calculation logic
 ```
 
 ## Notes

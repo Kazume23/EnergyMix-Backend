@@ -1,17 +1,15 @@
-﻿using EnergyMix.Backend.Models;
-using EnergyMix.Backend.Services;
+using EnergyMix.Backend.Calculators;
+using EnergyMix.Backend.Dtos.CarbonApi;
 using Xunit;
 
-namespace EnergyMix.Backend.Tests.Services;
+namespace EnergyMix.Backend.Tests.Calculators;
 
 public class CleanEnergyCalculatorTests
 {
     [Fact]
     public void CalculateCleanEnergyPercentage_ReturnsSumOfOnlyCleanEnergySources()
     {
-        var calculator = new CleanEnergyCalculator();
-
-        var generationMix = new List<GenerationMixItem>
+        var generationMix = new List<GenerationMixItemDto>
         {
             new() { Fuel = "biomass", Percentage = 10m },
             new() { Fuel = "nuclear", Percentage = 20m },
@@ -22,7 +20,7 @@ public class CleanEnergyCalculatorTests
             new() { Fuel = "coal", Percentage = 13m }
         };
 
-        var cleanEnergyPercentage = calculator.CalculateCleanEnergyPercentage(generationMix);
+        var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
 
         Assert.Equal(57m, cleanEnergyPercentage);
     }
@@ -30,16 +28,14 @@ public class CleanEnergyCalculatorTests
     [Fact]
     public void CalculateCleanEnergyPercentage_ReturnsZero_WhenThereAreNoCleanEnergySources()
     {
-        var calculator = new CleanEnergyCalculator();
-
-        var generationMix = new List<GenerationMixItem>
+        var generationMix = new List<GenerationMixItemDto>
         {
             new() { Fuel = "gas", Percentage = 60m },
             new() { Fuel = "coal", Percentage = 20m },
             new() { Fuel = "imports", Percentage = 20m }
         };
 
-        var cleanEnergyPercentage = calculator.CalculateCleanEnergyPercentage(generationMix);
+        var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
 
         Assert.Equal(0m, cleanEnergyPercentage);
     }

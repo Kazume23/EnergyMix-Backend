@@ -1,19 +1,17 @@
-﻿using EnergyMix.Backend.Models;
-using EnergyMix.Backend.Services;
+using EnergyMix.Backend.Calculators;
+using EnergyMix.Backend.Dtos.CarbonApi;
 using Xunit;
 
-namespace EnergyMix.Backend.Tests.Services;
+namespace EnergyMix.Backend.Tests.Calculators;
 
 public class ChargingWindowCalculatorTests
 {
     [Fact]
     public void FindOptimalChargingWindow_ReturnsWindowWithHighestAverageCleanEnergy()
     {
-        var calculator = new ChargingWindowCalculator(new CleanEnergyCalculator());
-
         var startTime = new DateTimeOffset(2026, 6, 11, 22, 0, 0, TimeSpan.Zero);
 
-        var generationIntervals = new List<GenerationInterval>
+        var generationIntervals = new List<GenerationIntervalDto>
         {
             CreateInterval(startTime, 10m),
             CreateInterval(startTime.AddMinutes(30), 20m),
@@ -24,7 +22,7 @@ public class ChargingWindowCalculatorTests
             CreateInterval(startTime.AddMinutes(180), 30m)
         };
 
-        var result = calculator.FindOptimalChargingWindow(generationIntervals, 2);
+        var result = ChargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, 2);
 
         Assert.Equal(startTime.AddMinutes(60), result.Start);
         Assert.Equal(startTime.AddMinutes(180), result.End);
@@ -44,24 +42,22 @@ public class ChargingWindowCalculatorTests
     [InlineData(7)]
     public void FindOptimalChargingWindow_ThrowsException_WhenHoursAreOutsideAllowedRange(int hours)
     {
-        var calculator = new ChargingWindowCalculator(new CleanEnergyCalculator());
-
-        var generationIntervals = new List<GenerationInterval>
+        var generationIntervals = new List<GenerationIntervalDto>
         {
             CreateInterval(new DateTimeOffset(2026, 6, 11, 0, 0, 0, TimeSpan.Zero), 50m)
         };
 
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            calculator.FindOptimalChargingWindow(generationIntervals, hours));
+            ChargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, hours));
     }
 
-    private static GenerationInterval CreateInterval(DateTimeOffset from, decimal cleanEnergyPercentage)
+    private static GenerationIntervalDto CreateInterval(DateTimeOffset from, decimal cleanEnergyPercentage)
     {
-        return new GenerationInterval
+        return new GenerationIntervalDto
         {
             From = from,
             To = from.AddMinutes(30),
-            GenerationMix = new List<GenerationMixItem>
+            GenerationMix = new List<GenerationMixItemDto>
             {
                 new() { Fuel = "wind", Percentage = cleanEnergyPercentage },
                 new() { Fuel = "gas", Percentage = 100m - cleanEnergyPercentage }

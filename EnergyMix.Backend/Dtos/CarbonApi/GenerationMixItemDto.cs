@@ -1,8 +1,8 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
-namespace EnergyMix.Backend.Models;
+namespace EnergyMix.Backend.Dtos.CarbonApi;
 
-public sealed class GenerationMixItem
+public sealed class GenerationMixItemDto
 {
     [JsonPropertyName("fuel")]
     public string Fuel { get; init; } = string.Empty;
