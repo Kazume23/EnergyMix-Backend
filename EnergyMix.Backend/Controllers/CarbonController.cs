@@ -1,4 +1,3 @@
-﻿using EnergyMix.Backend.Models;
 using EnergyMix.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,38 +7,17 @@ namespace EnergyMix.Backend.Controllers;
 [Route("api/carbon")]
 public class CarbonController : ControllerBase
 {
-    private readonly CarbonIntensityService _carbonIntensityService;
-    private readonly EnergyMixCalculator _energyMixCalculator;
-    private readonly ChargingWindowCalculator _chargingWindowCalculator;
+    private readonly CarbonService _carbonService;
 
-    public CarbonController(CarbonIntensityService carbonIntensityService, EnergyMixCalculator energyMixCalculator, ChargingWindowCalculator chargingWindowCalculator)
+    public CarbonController(CarbonService carbonService)
     {
-        _carbonIntensityService = carbonIntensityService;
-        _energyMixCalculator = energyMixCalculator;
-        _chargingWindowCalculator = chargingWindowCalculator;
+        _carbonService = carbonService;
     }
 
     [HttpGet("daily-mix")]
     public async Task<IActionResult> GetDailyMix()
     {
-        var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
-        var endDateUtc = startDateUtc.AddDays(3);
-
-        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
-            startDateUtc,
-            endDateUtc);
-
-        var requestedIntervals = new List<GenerationInterval>();
-
-        foreach (var generationInterval in generationResponse.Data)
-        {
-            if (generationInterval.From >= startDateUtc && generationInterval.To <= endDateUtc)
-            {
-                requestedIntervals.Add(generationInterval);
-            }
-        }
-
-        var dailyEnergyMix = _energyMixCalculator.CalculateDailyEnergyMix(requestedIntervals);
+        var dailyEnergyMix = await _carbonService.GetDailyMixAsync();
 
         return Ok(dailyEnergyMix);
     }
@@ -47,16 +25,9 @@ public class CarbonController : ControllerBase
     [HttpGet("optimal-charging-window")]
     public async Task<IActionResult> GetOptimalChargingWindow([FromQuery] int hours)
     {
-        var startDateUtc = new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero);
-        var endDateUtc = startDateUtc.AddDays(2);
-
-        var generationResponse = await _carbonIntensityService.GetGenerationAsync(
-            startDateUtc,
-            endDateUtc);
-
         try
         {
-            var optimalChargingWindow = _chargingWindowCalculator.FindOptimalChargingWindow(generationResponse.Data, hours);
+            var optimalChargingWindow = await _carbonService.GetOptimalChargingWindowAsync(hours);
 
             return Ok(optimalChargingWindow);
         }

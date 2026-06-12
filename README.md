@@ -110,7 +110,17 @@ Example response:
 {
   "start": "2026-06-13T01:00:00+00:00",
   "end": "2026-06-13T05:00:00+00:00",
-  "averageCleanEnergyPercentage": 63.41
+  "averageCleanEnergyPercentage": 63.41,
+  "sources": [
+    {
+      "fuel": "wind",
+      "percentage": 42.25
+    },
+    {
+      "fuel": "gas",
+      "percentage": 18.34
+    }
+  ]
 }
 ```
 
@@ -148,6 +158,8 @@ Current production frontend URL:
   "FrontendUrl": "https://energymix-frontend-hju7.onrender.com"
 }
 ```
+
+For production deployment, set `AllowedHosts` to the deployed backend host, for example through the `ASPNETCORE_ALLOWEDHOSTS` environment variable. Do not use `*` for a public deployment.
 
 ## Running Locally
 
