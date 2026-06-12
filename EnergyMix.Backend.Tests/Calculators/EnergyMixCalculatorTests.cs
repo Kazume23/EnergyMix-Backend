@@ -1,5 +1,7 @@
 using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Dtos.CarbonApi;
+using EnergyMix.Backend.Tests.Helpers;
+using EnergyMix.Backend.Utilities;
 using Xunit;
 
 namespace EnergyMix.Backend.Tests.Calculators;
@@ -11,41 +13,27 @@ public class EnergyMixCalculatorTests
     {
         var generationIntervals = new List<GenerationIntervalDto>
         {
-            new()
-            {
-                From = new DateTimeOffset(2026, 6, 11, 0, 0, 0, TimeSpan.Zero),
-                To = new DateTimeOffset(2026, 6, 11, 0, 30, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItemDto>
-                {
-                    new() { Fuel = "biomass", Percentage = 10m },
-                    new() { Fuel = "wind", Percentage = 20m },
-                    new() { Fuel = "gas", Percentage = 70m }
-                }
-            },
-            new()
-            {
-                From = new DateTimeOffset(2026, 6, 11, 0, 30, 0, TimeSpan.Zero),
-                To = new DateTimeOffset(2026, 6, 11, 1, 0, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItemDto>
-                {
-                    new() { Fuel = "biomass", Percentage = 30m },
-                    new() { Fuel = "wind", Percentage = 10m },
-                    new() { Fuel = "gas", Percentage = 60m }
-                }
-            },
-            new()
-            {
-                From = new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
-                To = new DateTimeOffset(2026, 6, 12, 0, 30, 0, TimeSpan.Zero),
-                GenerationMix = new List<GenerationMixItemDto>
-                {
-                    new() { Fuel = "nuclear", Percentage = 50m },
-                    new() { Fuel = "gas", Percentage = 50m }
-                }
-            }
+            GenerationTestDataBuilder.Interval(
+                new DateTimeOffset(2026, 6, 11, 0, 0, 0, TimeSpan.Zero),
+                GenerationTestDataBuilder.MixItem("biomass", 10m),
+                GenerationTestDataBuilder.MixItem("wind", 20m),
+                GenerationTestDataBuilder.MixItem("gas", 70m)),
+            GenerationTestDataBuilder.Interval(
+                new DateTimeOffset(2026, 6, 11, 0, 30, 0, TimeSpan.Zero),
+                GenerationTestDataBuilder.MixItem("biomass", 30m),
+                GenerationTestDataBuilder.MixItem("wind", 10m),
+                GenerationTestDataBuilder.MixItem("gas", 60m)),
+            GenerationTestDataBuilder.Interval(
+                new DateTimeOffset(2026, 6, 12, 0, 0, 0, TimeSpan.Zero),
+                GenerationTestDataBuilder.MixItem("nuclear", 50m),
+                GenerationTestDataBuilder.MixItem("gas", 50m))
         };
 
-        var result = EnergyMixCalculator.CalculateDailyEnergyMix(generationIntervals);
+        var energyMixCalculator = new EnergyMixCalculator(
+            new CleanEnergyCalculator(),
+            new EnergySourceShareCalculator());
+
+        var result = energyMixCalculator.CalculateDailyEnergyMix(generationIntervals);
 
         Assert.Equal(2, result.Count);
 

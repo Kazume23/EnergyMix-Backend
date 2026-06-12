@@ -1,0 +1,13 @@
+.git
+.github
+.vs
+
+**/bin
+**/obj
+artifacts
+
+*.user
+*.suo
+*.rsuser
+
+README.md
