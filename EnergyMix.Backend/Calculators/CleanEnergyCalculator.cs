@@ -2,7 +2,7 @@ using EnergyMix.Backend.Dtos.CarbonApi;
 
 namespace EnergyMix.Backend.Calculators;
 
-public static class CleanEnergyCalculator
+public sealed class CleanEnergyCalculator : ICleanEnergyCalculator
 {
     private static readonly HashSet<string> CleanEnergyTypes = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -13,7 +13,7 @@ public static class CleanEnergyCalculator
         "wind"
     };
 
-    public static decimal CalculateCleanEnergyPercentage(IEnumerable<GenerationMixItemDto> generationMix)
+    public decimal CalculateCleanEnergyPercentage(IEnumerable<GenerationMixItemDto> generationMix)
     {
         return generationMix
             .Where(generationMixItem => CleanEnergyTypes.Contains(generationMixItem.Fuel))

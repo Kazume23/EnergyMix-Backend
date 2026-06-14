@@ -3,9 +3,9 @@ using EnergyMix.Backend.Dtos.Responses;
 
 namespace EnergyMix.Backend.Utilities;
 
-public static class EnergySourceShareCalculator
+public sealed class EnergySourceShareCalculator : IEnergySourceShareCalculator
 {
-    public static List<EnergySourceShareResponseDto> CalculateAverageSourceShares(
+    public List<EnergySourceShareResponseDto> CalculateAverageSourceShares(
         IEnumerable<GenerationIntervalDto> generationIntervals)
     {
         return generationIntervals

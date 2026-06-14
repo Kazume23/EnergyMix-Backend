@@ -4,9 +4,20 @@ using EnergyMix.Backend.Utilities;
 
 namespace EnergyMix.Backend.Calculators;
 
-public static class EnergyMixCalculator
+public sealed class EnergyMixCalculator : IEnergyMixCalculator
 {
-    public static List<DailyEnergyMixResponseDto> CalculateDailyEnergyMix(
+    private readonly ICleanEnergyCalculator _cleanEnergyCalculator;
+    private readonly IEnergySourceShareCalculator _energySourceShareCalculator;
+
+    public EnergyMixCalculator(
+        ICleanEnergyCalculator cleanEnergyCalculator,
+        IEnergySourceShareCalculator energySourceShareCalculator)
+    {
+        _cleanEnergyCalculator = cleanEnergyCalculator;
+        _energySourceShareCalculator = energySourceShareCalculator;
+    }
+
+    public List<DailyEnergyMixResponseDto> CalculateDailyEnergyMix(
         IEnumerable<GenerationIntervalDto> generationIntervals)
     {
         return generationIntervals
@@ -19,10 +30,10 @@ public static class EnergyMixCalculator
                 return new DailyEnergyMixResponseDto
                 {
                     Date = dailyIntervalsGroup.Key,
-                    Sources = EnergySourceShareCalculator.CalculateAverageSourceShares(dailyIntervals),
+                    Sources = _energySourceShareCalculator.CalculateAverageSourceShares(dailyIntervals),
                     CleanEnergyPercentage = decimal.Round(
                         dailyIntervals.Average(generationInterval =>
-                            CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationInterval.GenerationMix)),
+                            _cleanEnergyCalculator.CalculateCleanEnergyPercentage(generationInterval.GenerationMix)),
                         2)
                 };
             })

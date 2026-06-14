@@ -1,21 +1,34 @@
+using EnergyMix.Backend.Constants;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Dtos.Responses;
+using EnergyMix.Backend.Exceptions;
 using EnergyMix.Backend.Utilities;
 
 namespace EnergyMix.Backend.Calculators;
 
-public static class ChargingWindowCalculator
+public sealed class ChargingWindowCalculator : IChargingWindowCalculator
 {
-    public static OptimalChargingWindowResponseDto FindOptimalChargingWindow(
+    private readonly ICleanEnergyCalculator _cleanEnergyCalculator;
+    private readonly IEnergySourceShareCalculator _energySourceShareCalculator;
+
+    public ChargingWindowCalculator(
+        ICleanEnergyCalculator cleanEnergyCalculator,
+        IEnergySourceShareCalculator energySourceShareCalculator)
+    {
+        _cleanEnergyCalculator = cleanEnergyCalculator;
+        _energySourceShareCalculator = energySourceShareCalculator;
+    }
+
+    public OptimalChargingWindowResponseDto FindOptimalChargingWindow(
         IEnumerable<GenerationIntervalDto> generationIntervals,
         int hours)
     {
-        if (hours < 1 || hours > 6)
+        if (hours < EnergyMixConstants.MinChargingHours || hours > EnergyMixConstants.MaxChargingHours)
         {
             throw new ArgumentOutOfRangeException(nameof(hours), "Hours must be between 1 and 6.");
         }
 
-        var requiredIntervalCount = hours * 2;
+        var requiredIntervalCount = hours * EnergyMixConstants.GenerationIntervalsPerHour;
 
         var sortedIntervals = generationIntervals
             .OrderBy(generationInterval => generationInterval.From)
@@ -23,36 +36,45 @@ public static class ChargingWindowCalculator
 
         if (sortedIntervals.Count < requiredIntervalCount)
         {
-            throw new InvalidOperationException("Not enough generation intervals to find an optimal charging window.");
+            throw new InsufficientGenerationDataException(
+                "Not enough generation intervals to find an optimal charging window.");
         }
 
-        decimal bestCleanEnergyPercentage = -1m;
-        List<GenerationIntervalDto> bestWindowIntervals = [];
+        var cleanEnergyPercentages = sortedIntervals
+            .Select(generationInterval =>
+                _cleanEnergyCalculator.CalculateCleanEnergyPercentage(generationInterval.GenerationMix))
+            .ToList();
 
-        for (var startIndex = 0; startIndex <= sortedIntervals.Count - requiredIntervalCount; startIndex++)
+        var currentWindowCleanEnergyTotal = cleanEnergyPercentages
+            .Take(requiredIntervalCount)
+            .Sum();
+
+        var bestStartIndex = 0;
+        var bestCleanEnergyTotal = currentWindowCleanEnergyTotal;
+
+        for (var endIndex = requiredIntervalCount; endIndex < cleanEnergyPercentages.Count; endIndex++)
         {
-            var currentWindowIntervals = sortedIntervals
-                .Skip(startIndex)
-                .Take(requiredIntervalCount)
-                .ToList();
+            currentWindowCleanEnergyTotal += cleanEnergyPercentages[endIndex];
+            currentWindowCleanEnergyTotal -= cleanEnergyPercentages[endIndex - requiredIntervalCount];
 
-            var currentWindowsAverageCleanEnergy = currentWindowIntervals
-                .Average(generationInterval =>
-                    CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationInterval.GenerationMix));
-
-            if (currentWindowsAverageCleanEnergy > bestCleanEnergyPercentage)
+            if (currentWindowCleanEnergyTotal > bestCleanEnergyTotal)
             {
-                bestCleanEnergyPercentage = currentWindowsAverageCleanEnergy;
-                bestWindowIntervals = currentWindowIntervals;
+                bestCleanEnergyTotal = currentWindowCleanEnergyTotal;
+                bestStartIndex = endIndex - requiredIntervalCount + 1;
             }
         }
+
+        var bestWindowIntervals = sortedIntervals
+            .Skip(bestStartIndex)
+            .Take(requiredIntervalCount)
+            .ToList();
 
         return new OptimalChargingWindowResponseDto
         {
             Start = bestWindowIntervals.First().From,
             End = bestWindowIntervals.Last().To,
-            AverageCleanEnergyPercentage = decimal.Round(bestCleanEnergyPercentage, 2),
-            Sources = EnergySourceShareCalculator.CalculateAverageSourceShares(bestWindowIntervals)
+            AverageCleanEnergyPercentage = decimal.Round(bestCleanEnergyTotal / requiredIntervalCount, 2),
+            Sources = _energySourceShareCalculator.CalculateAverageSourceShares(bestWindowIntervals)
         };
     }
 }

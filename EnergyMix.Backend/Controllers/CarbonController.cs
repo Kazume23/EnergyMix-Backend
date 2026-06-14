@@ -1,4 +1,5 @@
 using EnergyMix.Backend.Dtos.Requests;
+using EnergyMix.Backend.Dtos.Responses;
 using EnergyMix.Backend.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,33 +9,38 @@ namespace EnergyMix.Backend.Controllers;
 [Route("api/carbon")]
 public class CarbonController : ControllerBase
 {
-    private readonly CarbonService _carbonService;
+    private readonly ICarbonService _carbonService;
 
-    public CarbonController(CarbonService carbonService)
+    public CarbonController(ICarbonService carbonService)
     {
         _carbonService = carbonService;
     }
 
     [HttpGet("daily-mix")]
-    public async Task<IActionResult> GetDailyMix()
+    [ProducesResponseType(typeof(List<DailyEnergyMixResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    public async Task<IActionResult> GetDailyMix(CancellationToken cancellationToken)
     {
-        var dailyEnergyMix = await _carbonService.GetDailyMixAsync();
+        var dailyEnergyMix = await _carbonService.GetDailyMixAsync(cancellationToken);
 
         return Ok(dailyEnergyMix);
     }
 
     [HttpGet("optimal-charging-window")]
-    public async Task<IActionResult> GetOptimalChargingWindow([FromQuery] OptimalChargingWindowQueryDto query)
+    [ProducesResponseType(typeof(OptimalChargingWindowResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status502BadGateway)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status504GatewayTimeout)]
+    public async Task<IActionResult> GetOptimalChargingWindow(
+        [FromQuery] OptimalChargingWindowQueryDto query,
+        CancellationToken cancellationToken)
     {
-        try
-        {
-            var optimalChargingWindow = await _carbonService.GetOptimalChargingWindowAsync(query.Hours);
+        var optimalChargingWindow = await _carbonService.GetOptimalChargingWindowAsync(
+            query.Hours,
+            cancellationToken);
 
-            return Ok(optimalChargingWindow);
-        }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(new { message = exception.Message });
-        }
+        return Ok(optimalChargingWindow);
     }
 }
