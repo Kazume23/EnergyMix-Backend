@@ -23,7 +23,7 @@ public class CarbonControllerTests
 
         var controller = new CarbonController(new FakeCarbonService(expectedResponse));
 
-        var result = await controller.GetDailyMix();
+        var result = await controller.GetDailyMix(CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
 
@@ -43,7 +43,8 @@ public class CarbonControllerTests
         var controller = new CarbonController(new FakeCarbonService(expectedResponse));
 
         var result = await controller.GetOptimalChargingWindow(
-            new OptimalChargingWindowQueryDto { Hours = 1 });
+            new OptimalChargingWindowQueryDto { Hours = 1 },
+            CancellationToken.None);
 
         var okResult = Assert.IsType<OkObjectResult>(result);
 
@@ -67,12 +68,15 @@ public class CarbonControllerTests
             _optimalChargingWindowResponse = optimalChargingWindowResponse;
         }
 
-        public Task<List<DailyEnergyMixResponseDto>> GetDailyMixAsync()
+        public Task<List<DailyEnergyMixResponseDto>> GetDailyMixAsync(
+            CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_dailyEnergyMixResponse);
         }
 
-        public Task<OptimalChargingWindowResponseDto> GetOptimalChargingWindowAsync(int hours)
+        public Task<OptimalChargingWindowResponseDto> GetOptimalChargingWindowAsync(
+            int hours,
+            CancellationToken cancellationToken = default)
         {
             return Task.FromResult(_optimalChargingWindowResponse);
         }

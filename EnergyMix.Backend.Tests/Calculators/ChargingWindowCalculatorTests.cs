@@ -1,6 +1,7 @@
 using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Tests.Helpers;
+using EnergyMix.Backend.Utilities;
 using Xunit;
 
 namespace EnergyMix.Backend.Tests.Calculators;
@@ -23,7 +24,11 @@ public class ChargingWindowCalculatorTests
             GenerationTestDataBuilder.IntervalWithCleanEnergy(startTime.AddMinutes(180), 30m)
         };
 
-        var result = ChargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, 2);
+        var chargingWindowCalculator = new ChargingWindowCalculator(
+            new CleanEnergyCalculator(),
+            new EnergySourceShareCalculator());
+
+        var result = chargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, 2);
 
         Assert.Equal(startTime.AddMinutes(60), result.Start);
         Assert.Equal(startTime.AddMinutes(180), result.End);
@@ -50,7 +55,11 @@ public class ChargingWindowCalculatorTests
                 50m)
         };
 
+        var chargingWindowCalculator = new ChargingWindowCalculator(
+            new CleanEnergyCalculator(),
+            new EnergySourceShareCalculator());
+
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            ChargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, hours));
+            chargingWindowCalculator.FindOptimalChargingWindow(generationIntervals, hours));
     }
 }

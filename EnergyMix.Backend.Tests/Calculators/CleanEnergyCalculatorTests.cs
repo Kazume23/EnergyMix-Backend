@@ -20,7 +20,9 @@ public class CleanEnergyCalculatorTests
             GenerationTestDataBuilder.MixItem("coal", 13m)
         };
 
-        var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
+        var cleanEnergyCalculator = new CleanEnergyCalculator();
+
+        var cleanEnergyPercentage = cleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
 
         Assert.Equal(57m, cleanEnergyPercentage);
     }
@@ -35,7 +37,9 @@ public class CleanEnergyCalculatorTests
             GenerationTestDataBuilder.MixItem("imports", 20m)
         };
 
-        var cleanEnergyPercentage = CleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
+        var cleanEnergyCalculator = new CleanEnergyCalculator();
+
+        var cleanEnergyPercentage = cleanEnergyCalculator.CalculateCleanEnergyPercentage(generationMix);
 
         Assert.Equal(0m, cleanEnergyPercentage);
     }

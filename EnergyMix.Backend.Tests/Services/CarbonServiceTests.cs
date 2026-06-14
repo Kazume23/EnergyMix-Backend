@@ -1,7 +1,9 @@
+using EnergyMix.Backend.Calculators;
 using EnergyMix.Backend.Clients;
 using EnergyMix.Backend.Dtos.CarbonApi;
 using EnergyMix.Backend.Services;
 using EnergyMix.Backend.Tests.Helpers;
+using EnergyMix.Backend.Utilities;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
@@ -57,8 +59,13 @@ public class CarbonServiceTests
         ICarbonIntensityClient carbonIntensityClient,
         DateTimeOffset currentTimeUtc)
     {
+        var cleanEnergyCalculator = new CleanEnergyCalculator();
+        var energySourceShareCalculator = new EnergySourceShareCalculator();
+
         return new CarbonService(
             carbonIntensityClient,
+            new ChargingWindowCalculator(cleanEnergyCalculator, energySourceShareCalculator),
+            new EnergyMixCalculator(cleanEnergyCalculator, energySourceShareCalculator),
             NullLogger<CarbonService>.Instance,
             new MemoryCache(new MemoryCacheOptions()),
             new TestTimeProvider(currentTimeUtc));
@@ -92,7 +99,8 @@ public class CarbonServiceTests
 
         public Task<CarbonGenerationResponseDto> GetGenerationAsync(
             DateTimeOffset startDateUtc,
-            DateTimeOffset endDateUtc)
+            DateTimeOffset endDateUtc,
+            CancellationToken cancellationToken = default)
         {
             Requests.Add((startDateUtc, endDateUtc));
 

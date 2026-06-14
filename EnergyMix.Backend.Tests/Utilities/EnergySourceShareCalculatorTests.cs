@@ -22,7 +22,9 @@ public class EnergySourceShareCalculatorTests
                 GenerationTestDataBuilder.MixItem("gas", 60m))
         };
 
-        var result = EnergySourceShareCalculator.CalculateAverageSourceShares(generationIntervals);
+        var energySourceShareCalculator = new EnergySourceShareCalculator();
+
+        var result = energySourceShareCalculator.CalculateAverageSourceShares(generationIntervals);
 
         Assert.Contains(result, source => source.Fuel == "gas" && source.Percentage == 70m);
         Assert.Contains(result, source => source.Fuel == "wind" && source.Percentage == 30m);
